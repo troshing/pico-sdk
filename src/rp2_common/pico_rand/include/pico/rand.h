@@ -37,7 +37,7 @@ extern "C" {
  *  - Bus Performance Counter (\ref PICO_RAND_ENTROPY_SRC_BUS_PERF_COUNTER == 1): One of the bus fabric's performance
  *    counters is mixed in each time.
  *
- * \note all entropy sources are hashed before application to the PRNG state machine.
+ * \note All entropy sources are hashed before application to the PRNG state machine.
  *
  * \note The \em first time a random number is requested, the 128-bit PRNG state
  * must be seeded. Multiple entropy sources are also available for the seeding operation:
