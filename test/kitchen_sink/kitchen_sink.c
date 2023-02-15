@@ -124,6 +124,7 @@ __force_inline int something_inlined(int x) {
 auto_init_mutex(mutex);
 auto_init_recursive_mutex(recursive_mutex);
 
+uint8_t *buf;
 int main(void) {
     spiggle();
 
@@ -139,5 +140,5 @@ int main(void) {
     hard_assert(recursive_mutex_try_enter(&recursive_mutex, NULL));
     // this should compile as we are Cortex M0+
     __asm volatile("SVC #3");
-
+    rand_add_entropy(buf, 7);
 }

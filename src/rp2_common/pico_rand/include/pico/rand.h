@@ -178,6 +178,15 @@ uint64_t get_rand_64(void);
  */
 uint32_t get_rand_32(void);
 
+/*! \brief Add entropy to the random number generator
+ *  \ingroup pico_rand
+ *
+ * This method may be safely called from either core or from an IRQ.
+ *
+ * \param pointer to entropy buffer
+ * \param entropy_len the number of bytes of entropy in the entropy buffer
+ */
+void rand_add_entropy(const uint8_t *entropy, uint entropy_len);
 #ifdef __cplusplus
 }
 #endif

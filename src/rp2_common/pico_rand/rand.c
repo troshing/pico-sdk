@@ -49,6 +49,9 @@ static uint64_t __uninitialized_ram(rosc_samples);
 static uint8_t bus_counter_idx;
 #endif
 
+static volatile uint8_t check_byte;
+static uint8_t add_entropy_toggle;
+
 /* From the original source:
 
    This is a fixed-increment version of Java 8's SplittableRandom generator
@@ -252,7 +255,6 @@ uint64_t get_rand_64(void) {
         initialise_rand();
     }
 
-    static volatile uint8_t check_byte;
     rng_128_t local_rng_state = rng_state;
     uint8_t local_check_byte = check_byte;
     // Modify PRNG state with the run-time entropy sources,
@@ -300,4 +302,30 @@ void get_rand_128(rng_128_t *ptr128) {
 
 uint32_t get_rand_32(void) {
     return (uint32_t) get_rand_64();
+}
+
+void __used rand_add_entropy(const uint8_t *entropy, uint entropy_len) {
+    rng_128_t local_rng_state = rng_state;
+    uint8_t local_check_byte = check_byte;
+    while (entropy_len) {
+        uint64_t accum = 0;
+        uint count = MIN(8, entropy_len);
+        // generates a lot less code than 64 bit shifts
+        for(uint b = 0; b < count; b++) {
+            ((uint8_t*)&accum)[b] = *entropy++;
+        }
+        entropy_len -= count;
+        local_rng_state.r[add_entropy_toggle] ^= splitmix64(accum);
+        add_entropy_toggle ^= 1;
+    }
+    spin_lock_t *lock = spin_lock_instance(PICO_SPINLOCK_ID_RAND);
+    uint32_t save = spin_lock_blocking(lock);
+    if (local_check_byte != check_byte) {
+        // someone got a random number in the interim, so mix it in
+        local_rng_state.r[0] ^= rng_state.r[0];
+        local_rng_state.r[1] ^= rng_state.r[1];
+    }
+    rng_state = local_rng_state;
+    check_byte++;
+    spin_unlock(lock, save);
 }
