@@ -304,7 +304,7 @@ uint32_t get_rand_32(void) {
     return (uint32_t) get_rand_64();
 }
 
-void __used rand_add_entropy(const uint8_t *entropy, uint entropy_len) {
+void rand_add_entropy(const uint8_t *entropy, uint entropy_len) {
     rng_128_t local_rng_state = rng_state;
     uint8_t local_check_byte = check_byte;
     while (entropy_len) {
