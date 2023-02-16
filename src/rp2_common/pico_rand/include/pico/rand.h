@@ -156,7 +156,9 @@ typedef struct rng_128 {
  *
  * \param rand128 Pointer to storage to accept a 128-bit random number
  */
-void get_rand_128(rng_128_t *rand128);
+void rand_128(rng_128_t *rand128);
+// for backwards compatibility with 1.5.0
+#define get_rand_128 rand_128
 
 /*! \brief Get 64-bit random number
  *  \ingroup pico_rand
@@ -166,7 +168,9 @@ void get_rand_128(rng_128_t *rand128);
  *
  * \return 64-bit random number
  */
-uint64_t get_rand_64(void);
+uint64_t rand_64(void);
+// for backwards compatibility with 1.5.0
+#define get_rand_64 rand_64
 
 /*! \brief Get 32-bit random number
  *  \ingroup pico_rand
@@ -176,7 +180,9 @@ uint64_t get_rand_64(void);
  *
  * \return 32-bit random number
  */
-uint32_t get_rand_32(void);
+uint32_t rand_32(void);
+// for backwards compatibility with 1.5.0
+#define get_rand_32 rand_32
 
 /*! \brief Add entropy to the random number generator
  *  \ingroup pico_rand
@@ -187,6 +193,7 @@ uint32_t get_rand_32(void);
  * \param entropy_len the number of bytes of entropy in the entropy buffer
  */
 void rand_add_entropy(const uint8_t *entropy, uint entropy_len);
+
 #ifdef __cplusplus
 }
 #endif

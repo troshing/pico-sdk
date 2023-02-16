@@ -175,8 +175,8 @@ static uint64_t capture_additional_rosc_samples(uint n) {
 }
 #endif
 
-static void initialise_rand(void) {
-    rng_128_t local_rng_state = local_rng_state;
+static void initialize_rand(void) {
+    rng_128_t local_rng_state = rng_state;
     uint which = 0;
 #if PICO_RAND_SEED_ENTROPY_SRC_RAM_HASH
     ram_hash = sdbm_hash64_sram(ram_hash);
@@ -247,12 +247,12 @@ static void initialise_rand(void) {
     spin_unlock(lock, save);
 }
 
-uint64_t get_rand_64(void) {
+uint64_t rand_64(void) {
     if (!rng_initialised) {
         // Do not provide 'RNs' until the system has been initialised.  Note:
         // The first initialisation can be quite time-consuming depending on
         // the amount of RAM hashed, see RAM_HASH_START and RAM_HASH_END
-        initialise_rand();
+        initialize_rand();
     }
 
     rng_128_t local_rng_state = rng_state;
@@ -295,13 +295,13 @@ uint64_t get_rand_64(void) {
     return rand64;
 }
 
-void get_rand_128(rng_128_t *ptr128) {
-    ptr128->r[0] = get_rand_64();
-    ptr128->r[1] = get_rand_64();
+void rand_128(rng_128_t *rand128) {
+    rand128->r[0] = rand_64();
+    rand128->r[1] = rand_64();
 }
 
-uint32_t get_rand_32(void) {
-    return (uint32_t) get_rand_64();
+uint32_t rand_32(void) {
+    return (uint32_t) rand_64();
 }
 
 void rand_add_entropy(const uint8_t *entropy, uint entropy_len) {
