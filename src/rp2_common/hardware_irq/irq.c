@@ -9,6 +9,7 @@
 #include "hardware/platform_defs.h"
 #include "hardware/structs/scb.h"
 #include "hardware/claim.h"
+#include "hardware/structs/nvic.h"
 
 #include "pico/mutex.h"
 #include "pico/assert.h"
@@ -53,23 +54,23 @@ void irq_set_enabled(uint num, bool enabled) {
 
 bool irq_is_enabled(uint num) {
     check_irq_param(num);
-    return 0 != ((1u << num) & *((io_rw_32 *) (PPB_BASE + M0PLUS_NVIC_ISER_OFFSET)));
+    return 0 != (nvic_hw->iser & (1u << num));
 }
 
 void irq_set_mask_enabled(uint32_t mask, bool enabled) {
     if (enabled) {
         // Clear pending before enable
         // (if IRQ is actually asserted, it will immediately re-pend)
-        *((io_rw_32 *) (PPB_BASE + M0PLUS_NVIC_ICPR_OFFSET)) = mask;
-        *((io_rw_32 *) (PPB_BASE + M0PLUS_NVIC_ISER_OFFSET)) = mask;
+        nvic_hw->icpr = mask;
+        nvic_hw->iser = mask;
     } else {
-        *((io_rw_32 *) (PPB_BASE + M0PLUS_NVIC_ICER_OFFSET)) = mask;
+        nvic_hw->icer = mask;
     }
 }
 
 void irq_set_pending(uint num) {
     check_irq_param(num);
-    *((io_rw_32 *) (PPB_BASE + M0PLUS_NVIC_ISPR_OFFSET)) = 1u << num;
+    nvic_hw->ispr = 1u << num;
 }
 
 #if !PICO_DISABLE_SHARED_IRQ_HANDLERS
@@ -378,7 +379,7 @@ void irq_set_priority(uint num, uint8_t hardware_priority) {
     check_irq_param(num);
 
     // note that only 32 bit writes are supported
-    io_rw_32 *p = (io_rw_32 *)((PPB_BASE + M0PLUS_NVIC_IPR0_OFFSET) + (num & ~3u));
+    io_rw_32 *p = &nvic_hw->ipr[num>>2];
     *p = (*p & ~(0xffu << (8 * (num & 3u)))) | (((uint32_t) hardware_priority) << (8 * (num & 3u)));
 }
 
@@ -386,7 +387,7 @@ uint irq_get_priority(uint num) {
     check_irq_param(num);
 
     // note that only 32 bit reads are supported
-    io_rw_32 *p = (io_rw_32 *)((PPB_BASE + M0PLUS_NVIC_IPR0_OFFSET) + (num & ~3u));
+    io_rw_32 *p = &nvic_hw->ipr[num>>2];
     return (uint8_t)(*p >> (8 * (num & 3u)));
 }
 
@@ -428,7 +429,7 @@ void irq_init_priorities() {
 #if PICO_DEFAULT_IRQ_PRIORITY != 0
     static_assert(!(NUM_IRQS & 3), "");
     uint32_t prio4 = (PICO_DEFAULT_IRQ_PRIORITY & 0xff) * 0x1010101u;
-    io_rw_32 * p = (io_rw_32 *)(PPB_BASE + M0PLUS_NVIC_IPR0_OFFSET);
+    io_rw_32 * p = &nvic_hw->ipr[0];
     for (uint i = 0; i < NUM_IRQS / 4; i++) {
         *p++ = prio4;
     }
